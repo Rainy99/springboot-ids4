@@ -1,6 +1,7 @@
 package cn.devzhou.security.jwt.interceptor;
 
 import cn.devzhou.security.jwt.annotations.Authorize;
+import com.auth0.jwk.GuavaCachedJwkProvider;
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkProvider;
 import com.auth0.jwk.UrlJwkProvider;
@@ -40,13 +41,14 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             Authorize authorize = method.getAnnotation(Authorize.class);
             String originToken = request.getHeader("Authorization");
             if (originToken == null || originToken.isEmpty()){
-                response.setStatus(401);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return false;
             }
             String token = getToken(originToken);
             try {
                 DecodedJWT jwt = JWT.decode(token);
-                JwkProvider provider = new UrlJwkProvider(new URL(jwksUrl));
+                JwkProvider http = new UrlJwkProvider(new URL(jwksUrl));
+                JwkProvider provider = new GuavaCachedJwkProvider(http);
                 Jwk jwk = provider.get(jwt.getId());
                 Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(),null);
                 JWTVerifier verifier = JWT.require(algorithm)
@@ -55,7 +57,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                         .build();
                 verifier.verify(token);
             } catch (JWTVerificationException exception){
-                response.setStatus(401);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return false;
             }
         }

@@ -17,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.interfaces.RSAPublicKey;
@@ -43,8 +44,8 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return false;
             }
-            String token = getToken(originToken);
             try {
+                String token = getToken(originToken);
                 DecodedJWT jwt = JWT.decode(token);
                 JwkProvider http = new UrlJwkProvider(new URL(jwksUrl));
                 JwkProvider provider = new GuavaCachedJwkProvider(http);
@@ -56,6 +57,8 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                         .build();
                 verifier.verify(token);
             } catch (JWTVerificationException exception){
+                PrintWriter writer = response.getWriter();
+                writer.write(exception.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return false;
             }
@@ -74,7 +77,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     }
 
     private String getToken(String originToken) {
-        String[] temp = originToken.split(" ");
-        return temp[1];
+        String[] arr = originToken.split(" ");
+        return arr[1];
     }
 }

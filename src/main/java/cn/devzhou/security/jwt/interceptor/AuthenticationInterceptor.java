@@ -38,7 +38,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         HandlerMethod handlerMethod=(HandlerMethod)handler;
         Method method=handlerMethod.getMethod();
         if (method.isAnnotationPresent(Authorize.class)) {
-            Authorize authorize = method.getAnnotation(Authorize.class);
             String originToken = request.getHeader("Authorization");
             if (originToken == null || originToken.isEmpty()){
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
